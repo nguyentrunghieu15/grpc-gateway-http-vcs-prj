@@ -1,0 +1,31 @@
+version: "3.6"
+services:
+  postgre:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    volumes:
+     - type: tmpfs
+       target: /dev/shm
+       tmpfs:
+         size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      POSTGRES_PASSWORD: 1
+      POSTGRES_USER: hiro
+      POSTGRES_DB: on_demand_services_db
+  auth:
+    image: auth-services
+    depends_on:
+      - postgre
+  gateway:
+    image: gateway-api
+    depends_on:
+      - auth
+    ports:
+      - 3000:3000
+    environment:
+      - PROPERTIES_PATH=/home/temp/gateway.properties
+    volumes:
+      - gateway.properties:/home/temp/gateway.properties
